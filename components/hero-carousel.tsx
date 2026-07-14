@@ -221,7 +221,7 @@ export function HeroCarousel({
 
       <div className='relative z-10 mx-auto w-full max-w-7xl px-5 pb-12 pt-20 sm:px-8 sm:pb-14'>
         <p
-          className='hero-animate mb-2 text-xs font-medium uppercase tracking-[0.2em] text-forest-muted'
+          className='hero-animate hero-font-meta mb-2 text-xs font-medium uppercase tracking-[0.2em] text-forest-muted'
           suppressHydrationWarning
         >
           {active.kind === "forest"
@@ -234,14 +234,14 @@ export function HeroCarousel({
         <h1
           id='hero-brand'
           translate='no'
-          className='hero-animate font-display text-4xl font-semibold tracking-tight text-balance text-forest sm:text-5xl md:text-6xl'
+          className='hero-animate hero-font-display text-4xl font-semibold tracking-tight text-balance text-forest sm:text-5xl md:text-6xl'
         >
           Canopy
         </h1>
-        <p className='hero-animate hero-animate-delay-1 mt-3 max-w-xl font-display text-lg font-medium leading-snug text-pretty text-forest sm:text-xl'>
+        <p className='hero-animate hero-animate-delay-1 hero-font-subtitle mt-3 max-w-xl text-lg font-medium leading-snug text-pretty text-forest sm:text-xl'>
           {activeTitle || active.title}
         </p>
-        <p className='hero-animate hero-animate-delay-1 mt-2 max-w-lg text-base text-pretty text-forest-muted sm:text-lg'>
+        <p className='hero-animate hero-animate-delay-1 hero-font-meta mt-2 max-w-lg text-base text-pretty text-forest-muted sm:text-lg'>
           {activeSubtitle || active.subtitle}
         </p>
         <div className='hero-animate hero-animate-delay-2 mt-6 flex flex-col gap-4 sm:flex-row sm:items-center'>

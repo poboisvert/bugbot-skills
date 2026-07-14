@@ -1,0 +1,87 @@
+# Trigger Cursor Bugbot only for PRs: stage → main
+#
+# Bugbot has no native base/head branch filter. This workflow scopes reviews by:
+# 1. Enabling Bugbot on the repo in "manual / mention only" mode (dashboard), and
+# 2. Triggering a review here when a PR targets main from stage.
+#
+# Setup (one-time):
+# - Connect GitHub + enable Bugbot for this repo: https://cursor.com/dashboard?tab=bugbot
+# - Turn on "Run only when mentioned" / manualTriggerOnly for this repo
+#   (otherwise Bugbot still auto-reviews every PR)
+# - Optional but recommended: repo secret CURSOR_API_KEY (Cursor Dashboard → API Keys)
+#   with permission to call POST /bugbot/review. Without it, the workflow comments
+#   `bugbot run` on the PR instead.
+
+name: Bugbot (stage → main)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+concurrency:
+  group: bugbot-stage-main-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  trigger-bugbot:
+    if: github.head_ref == 'stage' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Trigger Bugbot via Cursor API
+        id: api
+        if: ${{ secrets.CURSOR_API_KEY != '' }}
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+          response="$(curl --silent --show-error --write-out '\n%{http_code}' \
+            --request POST \
+            --url https://api.cursor.com/bugbot/review \
+            -u "${CURSOR_API_KEY}:" \
+            --header 'Content-Type: application/json' \
+            --data "{\"prUrl\": \"${PR_URL}\"}")"
+          body="$(printf '%s\n' "$response" | sed '$d')"
+          code="$(printf '%s\n' "$response" | tail -n 1)"
+          echo "HTTP $code"
+          echo "$body"
+          if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+            echo "API trigger failed; falling back to PR comment."
+            echo "fallback=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "fallback=false" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Bugbot via PR comment
+        if: ${{ secrets.CURSOR_API_KEY == '' || steps.api.outputs.fallback == 'true' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- bugbot-stage-main-trigger -->';
+            const body = `${marker}\nbugbot run\n\n_Automated trigger for \`stage\` → \`main\`._`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

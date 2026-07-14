@@ -94,6 +94,25 @@ body {
   animation-delay: 0.36s;
 }
 
+/*
+  BAD: hero typefaces loaded from fonts.googleapis.com / fonts.gstatic.com
+  at runtime (extra DNS, CSS, and many woff2 downloads) — not next/font.
+*/
+.hero-font-display {
+  font-family: "Playfair Display", "Cormorant Garamond", Georgia, serif;
+  font-weight: 700;
+}
+
+.hero-font-subtitle {
+  font-family: "Cormorant Garamond", "Libre Baskerville", Georgia, serif;
+  font-weight: 600;
+}
+
+.hero-font-meta {
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-weight: 400;
+}
+
 .cart-drawer-panel {
   animation: drawer-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
