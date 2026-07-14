@@ -4,10 +4,6 @@ import { getPromoPlants } from "@/lib/plants";
 export function Deals() {
   const deals = getPromoPlants();
 
-  // #region agent log
-  fetch('http://127.0.0.1:7794/ingest/6f18c288-a8d4-4075-bcbe-00c4c5d88502',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'75a078'},body:JSON.stringify({sessionId:'75a078',runId:'pre-fix',hypothesisId:'C',location:'deals.tsx:Deals',message:'deals page render',data:{dealsCount:deals.length,dealIds:deals.map((d)=>d.plant.id),soonestEnd:deals[0]?{id:deals[0].plant.id,endDate:deals[0].promo.endDate}:null},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
-
   return (
     <section
       id='deals'

@@ -36,13 +36,6 @@ export function PromoCountdown({ promo }: { promo: PlantPromo }) {
   const [now, setNow] = useState<number>(() => endAt.toISOString());
   const time = getTimeLeft(endAt, now);
 
-  // #region agent log
-  {
-    const remaining = endAt.getTime() - (now as number);
-    fetch('http://127.0.0.1:7794/ingest/6f18c288-a8d4-4075-bcbe-00c4c5d88502',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'75a078'},body:JSON.stringify({sessionId:'75a078',runId:'pre-fix',hypothesisId:'A',location:'promo-countdown.tsx:render',message:'countdown now/remaining state',data:{endDate:promo.endDate,endAt:endAt.toISOString(),nowType:typeof now,nowValue:now,remaining,remainingIsNaN:Number.isNaN(remaining),expired:time.expired,labelPreview:`${time.days}d ${time.hours}h ${time.minutes}m ${time.seconds}s`},timestamp:Date.now()})}).catch(()=>{});
-  }
-  // #endregion
-
   useEffect(() => {
     const id = window.setInterval(() => {
       setNow(Date.now());

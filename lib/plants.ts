@@ -279,7 +279,7 @@ export type PromoPlant = {
 
 /** Plants with an active promo, soonest-ending first. */
 export function getPromoPlants(at: Date = new Date()): PromoPlant[] {
-  const result = plants
+  return plants
     .map((plant) => {
       const candidates = plant.promos.filter((promo) => {
         if (promo.price >= plant.price) return false;
@@ -304,24 +304,6 @@ export function getPromoPlants(at: Date = new Date()): PromoPlant[] {
       (a, b) =>
         getPromoEndTime(a.promo).getTime() - getPromoEndTime(b.promo).getTime(),
     );
-
-  // #region agent log
-  {
-    const viaIsPromoActive = plants.filter((p) => getActivePromo(p, at) !== null);
-    const mismatch = viaIsPromoActive
-      .filter((p) => !result.some((d) => d.plant.id === p.id))
-      .map((p) => p.id);
-    const endSamples = result.slice(0, 3).map((d) => ({
-      id: d.plant.id,
-      endDate: d.promo.endDate,
-      endAtIso: getPromoEndTime(d.promo).toISOString(),
-      msUntilEnd: getPromoEndTime(d.promo).getTime() - at.getTime(),
-    }));
-    fetch('http://127.0.0.1:7794/ingest/6f18c288-a8d4-4075-bcbe-00c4c5d88502',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'75a078'},body:JSON.stringify({sessionId:'75a078',runId:'pre-fix',hypothesisId:'B-C',location:'plants.ts:getPromoPlants',message:'promo selection UTC vs local active',data:{at:at.toISOString(),dealsCount:result.length,activeViaIsPromoActive:viaIsPromoActive.length,idsMissingFromDeals:mismatch,endSamples},timestamp:Date.now()})}).catch(()=>{});
-  }
-  // #endregion
-
-  return result;
 }
 
 export function displayPrice(plant: Plant, at: Date = new Date()): number {
