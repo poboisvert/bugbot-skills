@@ -1,4 +1,4 @@
-# App
+# App Workshop
 
 Next.js App Router demo used to exercise Cursor Bugbot and agent skills. The storefront is a plant catalogue with deals and a cart; parts of the app intentionally include performance and composition anti-patterns for review tooling to catch.
 
