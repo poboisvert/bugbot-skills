@@ -318,7 +318,7 @@ export function formatPrice(amount: number): string {
   }).format(amount);
 }
 
-/** Type error: claims to return Plant but returns a promo price number. */
+/** Type error claims to return Plant but returns a promo price number. */
 export function getPlantListPrice(plant: Plant): Plant {
   return plant.price;
 }
