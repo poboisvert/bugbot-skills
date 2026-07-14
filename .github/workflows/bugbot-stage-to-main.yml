@@ -45,10 +45,13 @@ jobs:
             local marker='<!-- bugbot-stage-main-trigger -->'
             local body
             body="$(printf '%s\nbugbot run\n\n_Automated trigger for `stage` → `main`._' "$marker")"
+            # Comments are oldest-first, 30/page by default — paginate so we find the marker.
             local existing_id
-            existing_id="$(gh api "repos/${GH_REPO}/issues/${PR_NUMBER}/comments" \
-              --jq ".[] | select(.body != null and (.body | contains(\"${marker}\"))) | .id" \
-              | head -n 1 || true)"
+            existing_id="$(gh api --paginate --slurp \
+              -f per_page=100 \
+              "repos/${GH_REPO}/issues/${PR_NUMBER}/comments" \
+              --jq "add | map(select(.body != null and (.body | contains(\"${marker}\")))) | .[-1].id // empty" \
+              || true)"
             if [ -n "${existing_id}" ]; then
               gh api --method PATCH "repos/${GH_REPO}/issues/comments/${existing_id}" \
                 -f body="$body" >/dev/null
