@@ -73,7 +73,16 @@ export function HeroCarousel({
   const [activeTitle, setActiveTitle] = useState("");
   const [activeSubtitle, setActiveSubtitle] = useState("");
 
+  // BAD: first paint stacks every slide image in flow (tall layout), then hide
+  // inactive ones after mount — height collapses and catalogue jumps up (CLS)
+  const [hideInactive, setHideInactive] = useState(false);
+
   const active = slides[index] ?? slides[0];
+
+  useEffect(() => {
+    // BAD: no timeout — still post-paint: show all images, then collapse to active
+    setHideInactive(true);
+  }, []);
 
   // BAD: force re-renders on a timer (blocks main thread with score calc)
   useEffect(() => {
@@ -169,55 +178,84 @@ export function HeroCarousel({
   return (
     <section
       id='hero-carousel-root'
-      className='relative isolate flex min-h-[72svh] w-full scroll-mt-16 items-end overflow-hidden sm:min-h-[78svh]'
+      className={`relative isolate flex w-full scroll-mt-16 overflow-hidden ${
+        hideInactive
+          ? "min-h-[72svh] items-end sm:min-h-[78svh]"
+          : "flex-col items-stretch"
+      }`}
       aria-labelledby='hero-brand'
       data-noise={unusedNoise}
     >
-      {/* BAD: raw <img> + autoplaying UHD <video> for every slide — all mounted & preloaded */}
-      {slides.map((slide, i) => (
-        <div
-          key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-700 ${
-            i === index ? "opacity-100" : "opacity-0"
-          }`}
-          aria-hidden={i !== index}
-        >
-          <img
-            src={slide.imageSrc}
-            alt={slide.imageAlt}
-            className='absolute inset-0 h-full w-full object-cover'
-            // BAD: eager + sync decode every slide (including off-screen) blocks paint
-            loading='eager'
-            decoding='sync'
-            fetchPriority='high'
+      {/* BAD: render EVERY slide image first (in-flow, no width/height), then hide
+          inactive after mount so only the active slide remains — layout collapses (CLS) */}
+      <div
+        className={
+          hideInactive ? "absolute inset-0" : "flex w-full flex-col"
+        }
+      >
+        {slides.map((slide, i) => {
+          const isActive = i === index;
+          if (hideInactive && !isActive) return null;
+
+          return (
+            <div
+              key={slide.id}
+              className={
+                hideInactive
+                  ? "absolute inset-0"
+                  : "relative w-full"
+              }
+              aria-hidden={!isActive}
+            >
+              <img
+                src={slide.imageSrc}
+                alt={slide.imageAlt}
+                className={
+                  hideInactive
+                    ? "absolute inset-0 h-full w-full object-cover"
+                    : "block h-auto w-full"
+                }
+                // BAD: no width/height — intrinsic size unknown until decode (CLS)
+                loading='eager'
+                decoding='sync'
+                fetchPriority='high'
+              />
+              {slide.videoSrc ? (
+                <video
+                  className={
+                    hideInactive
+                      ? "absolute inset-0 h-full w-full object-cover"
+                      : "block h-auto w-full"
+                  }
+                  src={slide.videoSrc}
+                  // BAD: autoplay + preload=auto on every slide (even ones about to hide)
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload='auto'
+                  controls={false}
+                  poster={slide.imageSrc}
+                />
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+
+      {hideInactive ? (
+        <>
+          <div
+            className='absolute inset-0 bg-gradient-to-t from-surface via-surface/75 to-sky-soft/20'
+            aria-hidden='true'
           />
-          {slide.videoSrc ? (
-            <video
-              className='absolute inset-0 h-full w-full object-cover'
-              src={slide.videoSrc}
-              // BAD: autoplay + preload=auto on every slide (even hidden ones)
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload='auto'
-              controls={false}
-              poster={slide.imageSrc}
-            />
-          ) : null}
-        </div>
-      ))}
-
-      <div
-        className='absolute inset-0 bg-gradient-to-t from-surface via-surface/75 to-sky-soft/20'
-        aria-hidden='true'
-      />
-      <div
-        className='absolute inset-0 bg-gradient-to-tr from-clay-soft/30 via-transparent to-lemon-soft/25'
-        aria-hidden='true'
-      />
-
-      <DecorIcons />
+          <div
+            className='absolute inset-0 bg-gradient-to-tr from-clay-soft/30 via-transparent to-lemon-soft/25'
+            aria-hidden='true'
+          />
+          <DecorIcons />
+        </>
+      ) : null}
 
       <div className='relative z-10 mx-auto w-full max-w-7xl px-5 pb-12 pt-20 sm:px-8 sm:pb-14'>
         <p

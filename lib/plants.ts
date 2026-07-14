@@ -1,4 +1,8 @@
-export type PlantCategory = "Low light" | "Pet-safe" | "Statement" | "Easy care";
+export type PlantCategory =
+  | "Low light"
+  | "Pet-safe"
+  | "Statement"
+  | "Easy care";
 
 export type PlantPromo = {
   price: number;
@@ -32,7 +36,7 @@ export const plants: Plant[] = [
       {
         price: 52,
         startDate: "2026-07-01",
-        endDate: "2026-07-31",
+        endDate: "2026-07-17",
         isFlash: false,
         isMonthlySubscribe: false,
       },
@@ -230,7 +234,10 @@ function parsePromoDay(isoDate: string): Date {
   return new Date(year, month - 1, day);
 }
 
-export function isPromoActive(promo: PlantPromo, at: Date = new Date()): boolean {
+export function isPromoActive(
+  promo: PlantPromo,
+  at: Date = new Date(),
+): boolean {
   const day = startOfDay(at);
   const start = parsePromoDay(promo.startDate);
   const end = parsePromoDay(promo.endDate);

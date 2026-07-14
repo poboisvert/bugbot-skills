@@ -48,6 +48,12 @@
       "sourceType": "github",
       "skillPath": "skills/writing-guidelines/SKILL.md",
       "computedHash": "25aa3a33a97bddbcb1847ce4a6169106ec25e5b19b15b99c66e75ab383866ef2"
+    },
+    "nextjs-seo-optimizer": {
+      "source": "MuhammedSuhaib/LevelUpSpeckit-Plus",
+      "sourceType": "github",
+      "skillPath": "Skill+SubAgents/skills/nextjs-seo-optimizer/skill.md",
+      "computedHash": "9c4ac02dc0e074d9c0f4cd18ad8d8e43ce41c2c6454a723b21d19213f5bd12fb"
     }
   }
 }
