@@ -1,4 +1,4 @@
-# Canopy App
+# Canopy
 
 Next.js App Router storefront used to exercise Cursor Bugbot and agent skills. Canopy is a plant catalogue with deals and a cart; parts of the app intentionally include performance, composition, and type anti-patterns for review tooling to catch.
 
