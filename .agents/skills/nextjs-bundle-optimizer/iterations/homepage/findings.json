@@ -1,0 +1,14 @@
+{
+  "iteration": "homepage",
+  "ts": "2026-07-14T02:51:32.386Z",
+  "top_chunks": [],
+  "heaviest_routes": [
+    {
+      "route": "pages:/_app",
+      "bytes": 0,
+      "chunk_count": 0
+    }
+  ],
+  "hints": [],
+  "has_treemap": false
+}

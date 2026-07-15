@@ -1,46 +1,34 @@
 import { HeroCarousel, type HeroSlide } from "@/components/hero-carousel";
 import { plants, type Plant } from "@/lib/plants";
-import _ from "lodash";
-import moment from "moment";
 
 const FOREST_IMAGE =
-  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop";
-
-// BAD: multi-MB remote plant videos — eager-loaded on the landing hero
-const PLANT_VIDEOS = [
-  "https://videos.pexels.com/video-files/3209829/3209829-uhd_2560_1440_25fps.mp4", // ~10MB UHD leaves
-  "https://videos.pexels.com/video-files/855029/855029-hd_1920_1080_30fps.mp4", // ~13MB HD greenery
-  "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-  "https://videos.pexels.com/video-files/3209829/3209829-uhd_2560_1440_25fps.mp4",
-] as const;
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=75";
 
 function pickHeroPlants(list: Plant[]): Plant[] {
-  // BAD: multiple full-array passes instead of one loop
-  const statement = list.filter((p) => p.category === "Statement");
-  const easy = list.filter((p) => p.careLevel === "Easy");
-  const priced = list
-    .slice()
-    .sort((a, b) => b.price - a.price)
-    .filter((p) => p.price > 40);
-  return _.uniqBy([...statement, ...easy, ...priced], "id").slice(0, 3);
-}
+  const seen = new Set<string>();
+  const picked: Plant[] = [];
 
-function hiRes(src: string): string {
-  if (src.includes("w=")) {
-    return src.replace(/w=\d+/, "w=2400").replace(/q=\d+/, "q=90");
+  for (const plant of list) {
+    if (picked.length >= 3) break;
+    const match =
+      plant.category === "Statement" ||
+      plant.careLevel === "Easy" ||
+      plant.price > 40;
+    if (!match || seen.has(plant.id)) continue;
+    seen.add(plant.id);
+    picked.push(plant);
   }
-  return `${src}&w=2400&q=90`;
+
+  return picked;
 }
 
 function buildSlides(heroPlants: Plant[]): HeroSlide[] {
-  const plantSlides: HeroSlide[] = heroPlants.map((plant, i) => ({
+  const plantSlides: HeroSlide[] = heroPlants.map((plant) => ({
     id: plant.id,
     title: plant.name,
     subtitle: plant.blurb,
-    imageSrc: hiRes(plant.imageSrc),
+    imageSrc: plant.imageSrc,
     imageAlt: plant.imageAlt,
-    // BAD: attach a heavy remote video to every plant slide
-    videoSrc: PLANT_VIDEOS[i % PLANT_VIDEOS.length],
     ctaHref: "#catalogue",
     ctaLabel: "Browse plants",
     kind: "plant" as const,
@@ -50,59 +38,47 @@ function buildSlides(heroPlants: Plant[]): HeroSlide[] {
     id: "forest-canopy",
     title: "Bring the forest indoors",
     subtitle: "Quiet rooms, soft light, and greenery priced for this week.",
-    imageSrc: hiRes(FOREST_IMAGE),
+    imageSrc: FOREST_IMAGE,
     imageAlt: "Sunlight filtering through a dense green forest canopy",
-    videoSrc: PLANT_VIDEOS[3],
     ctaHref: "/deals",
     ctaLabel: "Shop promos",
     kind: "forest",
   };
 
-  // BAD: extra full-bleed video slide so the hero downloads yet another UHD file
+  // Still-image lead slide — one optimized LCP candidate, no remote video
   const greenhouseSlide: HeroSlide = {
     id: "greenhouse-tour",
-    title: "Greenhouse on loop",
-    subtitle: "Streaming plant footage before anything else on the page.",
-    imageSrc: hiRes(FOREST_IMAGE),
+    title: "Greenhouse calm",
+    subtitle: "Thoughtfully chosen indoor plants with seasonal promo pricing.",
+    imageSrc: FOREST_IMAGE,
     imageAlt: "Dense indoor plants filling a greenhouse aisle",
-    videoSrc: PLANT_VIDEOS[0],
     ctaHref: "#catalogue",
     ctaLabel: "See the catalogue",
-    kind: "video",
+    kind: "forest",
   };
 
   return [greenhouseSlide, ...plantSlides, forestSlide];
 }
 
-export async function Hero() {
-  // BAD: sequential awaits / sync heavy work block the entire page (no Suspense)
-  const catalog = await Promise.resolve(plants);
-  const sorted = await Promise.resolve(
-    _.orderBy(catalog, ["price", "name"], ["desc", "asc"]),
-  );
-  const byCategory = await Promise.resolve(
-    _.sortBy(catalog, [(p) => p.category, (p) => p.name]),
-  );
+export function Hero() {
+  const slides = buildSlides(pickHeroPlants(plants));
+  return <HeroCarousel slides={slides} />;
+}
 
-  // BAD: unnecessary deep clone of the whole catalogue on every request
-  const cloned = _.cloneDeep(catalog);
-  const heroPlants = pickHeroPlants(cloned);
-  const slides = buildSlides(heroPlants);
-
-  // BAD: inflate the RSC→client payload with duplicated / unused fields
-  const allSlideMeta = slides.map((slide) => ({
-    ...slide,
-    plant: catalog.find((p) => p.id === slide.id),
-    indexedAt: moment().toISOString(),
-  }));
-
+/** Matches hero reserved height so Suspense fallback does not shift layout. */
+export function HeroFallback() {
   return (
-    <HeroCarousel
-      plants={catalog}
-      plantsSorted={sorted}
-      plantsByCategory={byCategory}
-      slides={slides}
-      allSlideMeta={allSlideMeta}
-    />
+    <section
+      className='relative isolate flex min-h-[72svh] w-full scroll-mt-16 items-end overflow-hidden bg-sky-soft sm:min-h-[78svh]'
+      aria-hidden='true'
+    >
+      <div className='relative z-10 mx-auto w-full max-w-7xl px-5 pb-12 pt-20 sm:px-8 sm:pb-14'>
+        <div className='mb-2 h-3 w-40 rounded bg-forest/10' />
+        <div className='h-12 w-48 rounded bg-forest/15 sm:h-14 md:h-16' />
+        <div className='mt-3 h-6 max-w-xl rounded bg-forest/10' />
+        <div className='mt-2 h-5 max-w-lg rounded bg-forest/10' />
+        <div className='mt-6 h-11 w-36 rounded-full bg-sage/80' />
+      </div>
+    </section>
   );
 }

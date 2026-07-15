@@ -1,0 +1,7 @@
+{
+  "ts": "remove-client-lodash-moment",
+  "bundler": "turbopack",
+  "build_seconds": 4,
+  "cache": "cold",
+  "status": "ok"
+}
