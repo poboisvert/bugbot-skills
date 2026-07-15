@@ -36,7 +36,7 @@ export const plants: Plant[] = [
       {
         price: 52,
         startDate: "2026-07-01",
-        endDate: "2026-07-17",
+        endDate: "2026-07-15",
         isFlash: false,
         isMonthlySubscribe: false,
       },
@@ -267,9 +267,18 @@ export function hasPromo(plant: Plant, at: Date = new Date()): boolean {
   return getActivePromo(plant, at) !== null;
 }
 
-/** Promo ends at end of its endDate calendar day in UTC. */
+/** Promo ends at the end of its endDate local calendar day (inclusive). */
 export function getPromoEndTime(promo: PlantPromo): Date {
-  return new Date(`${promo.endDate}T00:00:00.000Z`);
+  const endDay = parsePromoDay(promo.endDate);
+  return new Date(
+    endDay.getFullYear(),
+    endDay.getMonth(),
+    endDay.getDate(),
+    23,
+    59,
+    59,
+    999,
+  );
 }
 
 export type PromoPlant = {
@@ -279,24 +288,11 @@ export type PromoPlant = {
 
 /** Plants with an active promo, soonest-ending first. */
 export function getPromoPlants(at: Date = new Date()): PromoPlant[] {
+  // Same source of truth as catalogue/cart: inclusive local endDate via getActivePromo
   return plants
     .map((plant) => {
-      const candidates = plant.promos.filter((promo) => {
-        if (promo.price >= plant.price) return false;
-        const start = new Date(`${promo.startDate}T00:00:00.000Z`);
-        const end = new Date(`${promo.endDate}T00:00:00.000Z`);
-        return at >= start && at < end;
-      });
-      if (candidates.length === 0) return null;
-
-      const promo = candidates.reduce((best, next) => {
-        if (next.price < best.price) return next;
-        if (next.price === best.price && next.isFlash && !best.isFlash) {
-          return next;
-        }
-        return best;
-      });
-
+      const promo = getActivePromo(plant, at);
+      if (!promo) return null;
       return { plant, promo };
     })
     .filter((entry): entry is PromoPlant => entry !== null)

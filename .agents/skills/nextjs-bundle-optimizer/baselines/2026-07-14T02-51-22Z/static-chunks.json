@@ -1,0 +1,19 @@
+{
+  "total_js": 1057448,
+  "chunks": {
+    "0d33qs9o_u63r.js": 394833,
+    "3qv7kzfp4-_ak.js": 227296,
+    "2j-xfync1f2az.js": 145528,
+    "0cz1d0mv5g_q7.js": 112594,
+    "3yo1k-64hx3s2.js": 54641,
+    "3cc6xtjq94c2q.js": 50691,
+    "3j0tvzmk--hqy.js": 31939,
+    "4047hbv3i8hyz.js": 22484,
+    "turbopack-1utrdt88f9l--.js": 10580,
+    "2vv5og4u77w_u.js": 3485,
+    "3jhz7n-zm0vnw.js": 3377
+  },
+  "lodash_moment_chunk": {
+    "0d33qs9o_u63r.js": 394833
+  }
+}

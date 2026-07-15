@@ -1,12 +1,9 @@
+import { Suspense } from "react";
 import { Catalogue } from "@/components/catalogue";
-import { Hero } from "@/components/hero";
+import { Hero, HeroFallback } from "@/components/hero";
 import { plants } from "@/lib/plants";
 
-export default async function Home() {
-  // BAD: resolve the async Hero before returning any JSX — blocks catalogue too
-  // (no Suspense boundary around the hero)
-  const hero = await Hero();
-
+export default function Home() {
   return (
     <>
       <a
@@ -15,7 +12,9 @@ export default async function Home() {
       >
         Skip to catalogue
       </a>
-      {hero}
+      <Suspense fallback={<HeroFallback />}>
+        <Hero />
+      </Suspense>
       <Catalogue plants={plants} />
     </>
   );
